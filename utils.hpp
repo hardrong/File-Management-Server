@@ -301,10 +301,17 @@ class HttpResponse
   {
 
     std::string rsp_header;
+    std::string data_size;
     rsp_header = info._version + " " + "200 OK \r\n";
     rsp_header += "Content-Type: application/octet-stream\r\n";
     rsp_header += "Connection: close\r\n";
     rsp_header += "Connection-Length" + _fsize + "\r\n"; 
+     if(info._hdr_list.find("Range") != info._hdr_list.end())              
+    {                                                                     
+      std::string tmp = info._hdr_list["Range"];                          
+      data_size = tmp.substr(7);                                        
+    rsp_header += "Content-Range: bytes" + data_size + '/' + _total_size + "\r\n";                                                              
+      } 
     rsp_header += "ETag: " + _etag + "\r\n";
     rsp_header += "Last-Modified: " + _mtime + "\r\n";
     rsp_header += "Date: " + _date + "\r\n\r\n";
@@ -419,14 +426,15 @@ class HttpResponse
       std::string mime;
       Utils::GetMime(p_dirent[i]->d_name,mime);
       std::string fsize;
-      Utils::DigitToStr(st.st_size/1024,fsize);
+      Utils::DigitToStr(st.st_size,fsize);
+      _total_size = fsize;
       file_html  += "<li><strong><a href='"+ info._path_info;
       file_html += p_dirent[i]->d_name;
       file_html += "'>" ;
       file_html += p_dirent[i]->d_name;
       file_html += "</a></strong>";
       file_html += "<br />";
-      file_html += "<modified: " + mtime + "<br />";
+      file_html += "modified: " + mtime + "<br />";
       file_html +=  mime + " - " + fsize + "kbytes";
       file_html += "<br /><br /></small></li>";
       SendCData(file_html);
